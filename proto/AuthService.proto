@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package AuthService;
+
+service AuthService{
+    rpc Auth(User) returns (Token) {}
+    rpc ValidateToken(Token) returns (Token) {}
+}
+
+message User {
+    string name = 1;
+    string email = 2;
+    string phoneNumber = 3;
+    string googleId = 4;
+    repeated string genre = 5 ;
+    repeated string language = 6 ;
+    repeated string contentType = 7 ;
+}
+
+message Token {
+    string token = 1;
+    bool valid = 2;
+    repeated Error errors = 3;
+}
+
+message Error {
+    int32 code = 1;
+    string description = 2;
+}

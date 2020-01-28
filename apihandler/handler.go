@@ -6,7 +6,6 @@ import (
 	pb "github.com/transavro/AuthService/proto"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,20 +29,14 @@ type CustomClaims struct {
 }
 
 func (srv *Server) Auth(ctx context.Context, req *pb.User) (*pb.Token, error) {
-	findResult := srv.UserCollection.FindOne(ctx, bson.D{{"email", req.GetEmail()}})
+	findResult := srv.UserCollection.FindOne(ctx, bson.D{{"emac", req.GetEmac()}})
 	if findResult.Err() != nil {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("User not found: %s", findResult.Err()))
 	}
 	var user *pb.User
-	err := findResult.Decode(user)
+	err := findResult.Decode(&user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Error while decoding userData: %s", err))
-	}
-
-	// Compares our given password against the hashed password
-	// stored in the database
-	if err := bcrypt.CompareHashAndPassword([]byte(user.GetGoogleId()), []byte(req.GetGoogleId())); err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("wrong sensitive information : %s", err))
 	}
 
 	token, err := srv.Encode(user)
@@ -52,6 +45,7 @@ func (srv *Server) Auth(ctx context.Context, req *pb.User) (*pb.Token, error) {
 	}
 
 	return &pb.Token{Token:token}, nil
+
 }
 
 func (srv *Server) ValidateToken(ctx context.Context, req *pb.Token) (*pb.Token,error) {
@@ -61,8 +55,8 @@ func (srv *Server) ValidateToken(ctx context.Context, req *pb.Token) (*pb.Token,
 	if err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Error while decoding token:  ", err))
 	}
-	if claims.User.GetGoogleId() == "" {
-		return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("Invalid Token "))
+	if claims.User.GetEmac() == "" {
+		return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("No emac found. "))
 	}
 	return &pb.Token{Valid:true}, nil
 }
@@ -70,14 +64,14 @@ func (srv *Server) ValidateToken(ctx context.Context, req *pb.Token) (*pb.Token,
 // Encode a claim into a JWT
 func (srv *Server) Encode(user *pb.User) (string, error) {
 
-	expireToken := time.Now().Add(time.Hour * 72).Unix()
+	expireToken := time.Now().Add(time.Hour * 3).Unix()
 
 	// Create the Claims
 	claims := CustomClaims{
 		user,
 		jwt.StandardClaims{
 			ExpiresAt: expireToken,
-			Issuer:    "shippy.user",
+			Issuer:    "Cloudwalker.AuthService",
 		},
 	}
 

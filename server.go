@@ -19,14 +19,12 @@ import (
 )
 
 const (
-	defaultHost          = "mongodb://nayan:tlwn722n@cluster0-shard-00-00-8aov2.mongodb.net:27017,cluster0-shard-00-01-8aov2.mongodb.net:27017,cluster0-shard-00-02-8aov2.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority"
-	RedisHost = "192.168.1.143:6379"
+	atlasHost  = "mongodb://nayan:tlwn722n@cluster0-shard-00-00-8aov2.mongodb.net:27017,cluster0-shard-00-01-8aov2.mongodb.net:27017,cluster0-shard-00-02-8aov2.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority"
+	RedisHost = ":6379"
 	developmentMongoHost = "mongodb://dev-uni.cloudwalker.tv:6592"
-	grpc_port        = ":7769"
-	rest_port		 = ":7770"
+	grpc_port        = ":7757"
+	rest_port		 = ":7758"
 )
-
-
 
 func startGRPCServer(address string) error {
 	// create a listener on TCP port
@@ -35,7 +33,7 @@ func startGRPCServer(address string) error {
 		return fmt.Errorf("failed to listen: %v", err)
 	}  // create a server instance
 	s := apihandler.Server{
-		getMongoCollection("cloudwalker", "users", developmentMongoHost),
+		getMongoCollection("cwtx2devel", "authwalls_daiwa", developmentMongoHost),
 	}
 
 	grpcServer := grpc.NewServer()  // attach the Ping service to the server
@@ -63,7 +61,7 @@ func startRESTServer(address, grpcAddress string) error {
 
 	opts := []grpc.DialOption{grpc.WithInsecure()}  // Register ping
 
-	err := pb.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcAddress, opts)
+	err := pb.RegisterAuthServiceHandlerFromEndpoint(ctx, mux, grpcAddress, opts)
 
 	if err != nil {
 		return fmt.Errorf("could not register service Ping: %s", err)

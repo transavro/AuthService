@@ -2,19 +2,31 @@ syntax = "proto3";
 
 package AuthService;
 
+import   "google/api/annotations.proto";
+
 service AuthService{
-    rpc Auth(User) returns (Token) {}
-    rpc ValidateToken(Token) returns (Token) {}
+    rpc Auth(User) returns (Token) {
+        option (google.api.http) = {
+                post:"/auth/Auth"
+                body: "*"
+        };
+    }
+    rpc ValidateToken(Token) returns (Token) {
+        option (google.api.http) = {
+                post:"/auth/ValidateToken"
+                body: "*"
+        };
+    }
+}
+
+message DisableTokenResp{
+    bool isSuccessfull = 1;
 }
 
 message User {
-    string name = 1;
-    string email = 2;
-    string phoneNumber = 3;
-    string googleId = 4;
-    repeated string genre = 5 ;
-    repeated string language = 6 ;
-    repeated string contentType = 7 ;
+    string emac = 1;
+    string mboard = 2;
+    string panel = 3;
 }
 
 message Token {
